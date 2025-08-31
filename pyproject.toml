@@ -1,0 +1,208 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astral-assessment"
+version = "1.0.0"
+description = "MVP for highly tailored lead intelligence pipeline"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = [
+    "fastapi",
+    "inngest", 
+    "firecrawl",
+    "web-scraping",
+    "async",
+    "ai"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Framework :: FastAPI",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+]
+
+dependencies = [
+    # Core framework
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    
+    # Async and HTTP
+    "httpx>=0.24.0",
+    "aiofiles>=23.0.0",
+    
+    # Data validation and settings
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "python-dotenv>=1.0.0",
+    
+    # Queue and orchestration
+    "inngest>=0.3.0",
+    
+    # Utilities
+    "python-multipart>=0.0.6",  # For form data
+    "psutil>=5.9.0",  # For system metrics in health check
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    
+    # Code quality
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "isort>=5.12.0",
+    
+    # Development tools
+    "ipython>=8.14.0",
+    "rich>=13.5.0",  # For better terminal output
+    "watchdog>=3.0.0",  # For file watching
+]
+
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "faker>=19.0.0",  # For generating test data
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/astral-assessment"
+"Bug Tracker" = "https://github.com/yourusername/astral-assessment/issues"
+"Documentation" = "https://github.com/yourusername/astral-assessment#readme"
+
+[project.scripts]
+astral-server = "main:run_server"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "core*", "features*"]
+exclude = ["tests*", "scripts*", "outputs*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.json", "*.md", "*.txt"]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "--verbose",
+    "--asyncio-mode=auto",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-fail-under=0",  # No coverage requirement for assessment
+    "-W", "ignore::DeprecationWarning",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py39", "py310", "py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+  | outputs
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip = ["venv", ".venv", "build", "dist", "outputs"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_any_generics = false
+ignore_missing_imports = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+check_untyped_defs = true
+strict_optional = true
+exclude = [
+    "venv",
+    ".venv",
+    "tests",
+    "outputs",
+    "scripts",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/.venv/*",
+    "*/outputs/*",
+    "*/scripts/*",
+    "setup.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "def __str__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[tool.flake8]
+max-line-length = 100
+extend-ignore = ["E203", "W503"]
+exclude = [
+    ".git",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "build",
+    "dist",
+    "outputs",
+]
+per-file-ignores = [
+    "__init__.py:F401",
+    "tests/*:F401,F811",
+]

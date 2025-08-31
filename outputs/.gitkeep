@@ -1,0 +1,9 @@
+# Output Directory
+
+This directory stores JSON output files from the registration workflow.
+
+Files are named: `analysis_YYYYMMDD_HHMMSS_<request_id>.json`
+
+No database is used - all data is stored as JSON files.
+
+This file ensures the directory is tracked by git while keeping the actual output files ignored (see .gitignore).

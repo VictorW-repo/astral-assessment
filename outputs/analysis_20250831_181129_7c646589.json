@@ -1,0 +1,125 @@
+{
+  "request_id": "7c646589-aa23-49aa-99f0-eebc884c3356",
+  "timestamp": "2025-08-31T22:11:28.184206+00:00",
+  "input_data": {
+    "first_name": "Alice",
+    "last_name": "Anderson",
+    "company_website": "https://stripe.com",
+    "linkedin": null
+  },
+  "linkedin_analysis": {
+    "status": "not_implemented"
+  },
+  "website_analysis": {
+    "discovered_urls": [
+      "https://stripe.com",
+      "https://stripe.com/about",
+      "https://stripe.com/about-us",
+      "https://stripe.com/our-story",
+      "https://stripe.com/mission",
+      "https://stripe.com/team",
+      "https://stripe.com/leadership",
+      "https://stripe.com/our-team",
+      "https://stripe.com/services",
+      "https://stripe.com/solutions",
+      "https://stripe.com/products",
+      "https://stripe.com/what-we-do",
+      "https://stripe.com/case-studies",
+      "https://stripe.com/portfolio",
+      "https://stripe.com/our-work",
+      "https://stripe.com/clients",
+      "https://stripe.com/customers",
+      "https://stripe.com/testimonials",
+      "https://stripe.com/blog",
+      "https://stripe.com/news",
+      "https://stripe.com/insights",
+      "https://stripe.com/resources",
+      "https://stripe.com/contact",
+      "https://stripe.com/contact-us",
+      "https://stripe.com/careers",
+      "https://stripe.com/jobs",
+      "https://stripe.com/investors",
+      "https://stripe.com/investor-relations",
+      "https://stripe.com/press",
+      "https://stripe.com/media",
+      "https://stripe.com/index.html",
+      "https://stripe.com/about.html",
+      "https://stripe.com/services.html",
+      "https://stripe.com/contact.html"
+    ],
+    "filtered_urls": [
+      "https://stripe.com/about-us",
+      "https://stripe.com/leadership",
+      "https://stripe.com/our-team",
+      "https://stripe.com/case-studies",
+      "https://stripe.com/portfolio",
+      "https://stripe.com/services",
+      "https://stripe.com/solutions"
+    ],
+    "scraped_content": [
+      {
+        "url": "https://stripe.com/about-us",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/leadership",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/our-team",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/case-studies",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/portfolio",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/services",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://stripe.com/solutions",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      }
+    ],
+    "filter_reasons": {
+      "https://stripe.com/about-us": "contains_about, about_us_page, shallow_url, short_url",
+      "https://stripe.com/leadership": "contains_leadership, leadership_page, shallow_url, short_url",
+      "https://stripe.com/our-team": "contains_team, team_page, shallow_url, short_url",
+      "https://stripe.com/case-studies": "contains_case-studies, case_studies, shallow_url, short_url",
+      "https://stripe.com/portfolio": "contains_portfolio, portfolio, shallow_url, short_url",
+      "https://stripe.com/services": "contains_services, services, shallow_url, short_url",
+      "https://stripe.com/solutions": "contains_solutions, solutions, shallow_url, short_url"
+    },
+    "statistics": {
+      "total_discovered": 34,
+      "total_filtered": 7,
+      "total_scraped": 0,
+      "scrape_failures": 7
+    }
+  },
+  "_metadata": {
+    "filename": "analysis_20250831_181129_7c646589.json",
+    "saved_at": "2025-08-31T22:11:29.701345+00:00",
+    "version": "1.0.0",
+    "philosophy": "wars are won with logistics and propaganda"
+  }
+}

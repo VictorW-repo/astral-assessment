@@ -1,0 +1,125 @@
+{
+  "request_id": "ea8f11cf-49bb-4b23-abbe-270ef767c541",
+  "timestamp": "2025-08-31T22:13:29.414436+00:00",
+  "input_data": {
+    "first_name": "Test",
+    "last_name": "Debug",
+    "company_website": "https://example.com",
+    "linkedin": null
+  },
+  "linkedin_analysis": {
+    "status": "not_implemented"
+  },
+  "website_analysis": {
+    "discovered_urls": [
+      "https://example.com",
+      "https://example.com/about",
+      "https://example.com/about-us",
+      "https://example.com/our-story",
+      "https://example.com/mission",
+      "https://example.com/team",
+      "https://example.com/leadership",
+      "https://example.com/our-team",
+      "https://example.com/services",
+      "https://example.com/solutions",
+      "https://example.com/products",
+      "https://example.com/what-we-do",
+      "https://example.com/case-studies",
+      "https://example.com/portfolio",
+      "https://example.com/our-work",
+      "https://example.com/clients",
+      "https://example.com/customers",
+      "https://example.com/testimonials",
+      "https://example.com/blog",
+      "https://example.com/news",
+      "https://example.com/insights",
+      "https://example.com/resources",
+      "https://example.com/contact",
+      "https://example.com/contact-us",
+      "https://example.com/careers",
+      "https://example.com/jobs",
+      "https://example.com/investors",
+      "https://example.com/investor-relations",
+      "https://example.com/press",
+      "https://example.com/media",
+      "https://example.com/index.html",
+      "https://example.com/about.html",
+      "https://example.com/services.html",
+      "https://example.com/contact.html"
+    ],
+    "filtered_urls": [
+      "https://example.com/about-us",
+      "https://example.com/leadership",
+      "https://example.com/our-team",
+      "https://example.com/case-studies",
+      "https://example.com/portfolio",
+      "https://example.com/services",
+      "https://example.com/solutions"
+    ],
+    "scraped_content": [
+      {
+        "url": "https://example.com/about-us",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/leadership",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/our-team",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/case-studies",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/portfolio",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/services",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://example.com/solutions",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      }
+    ],
+    "filter_reasons": {
+      "https://example.com/about-us": "contains_about, about_us_page, shallow_url, short_url",
+      "https://example.com/leadership": "contains_leadership, leadership_page, shallow_url, short_url",
+      "https://example.com/our-team": "contains_team, team_page, shallow_url, short_url",
+      "https://example.com/case-studies": "contains_case-studies, case_studies, shallow_url, short_url",
+      "https://example.com/portfolio": "contains_portfolio, portfolio, shallow_url, short_url",
+      "https://example.com/services": "contains_services, services, shallow_url, short_url",
+      "https://example.com/solutions": "contains_solutions, solutions, shallow_url, short_url"
+    },
+    "statistics": {
+      "total_discovered": 34,
+      "total_filtered": 7,
+      "total_scraped": 0,
+      "scrape_failures": 7
+    }
+  },
+  "_metadata": {
+    "filename": "analysis_20250831_181330_ea8f11cf.json",
+    "saved_at": "2025-08-31T22:13:30.930037+00:00",
+    "version": "1.0.0",
+    "philosophy": "wars are won with logistics and propaganda"
+  }
+}

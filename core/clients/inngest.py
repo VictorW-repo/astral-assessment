@@ -4,12 +4,11 @@ This is the tricky part - triggering functions from API endpoints
 """
 
 import logging
-from typing import Optional, Dict, Any, Callable
+from typing import Optional, Dict, Any
 import json
 from datetime import datetime
 
 from inngest import Inngest, Event
-from inngest.fast_api import serve
 
 from core.config import settings
 from core.utils import uid, ts
@@ -70,32 +69,8 @@ async def trigger_event(
         return False
 
 
-def create_function(
-    function_id: str,
-    trigger_event: str,
-    retries: int = 3
-) -> Callable:
-    """
-    Create an Inngest function decorator.
-    This is used to define background functions that process events.
-    
-    Args:
-        function_id: Unique function identifier
-        trigger_event: Event name that triggers this function
-        retries: Number of retries on failure
-    
-    Returns:
-        Decorator for the function
-    """
-    return inngest_client.create_function(
-        fn_id=function_id,
-        trigger={"event": trigger_event},
-        retries=retries
-    )
-
-
 # Register workflow function
-# This will be imported by the workflow module
+# This will be imported by main.py for serving
 @inngest_client.create_function(
     fn_id="process-registration",
     trigger={"event": settings.INNGEST_REGISTER_EVENT},
@@ -105,9 +80,6 @@ async def process_registration(event: Event, step):
     """
     Main registration processing function.
     This is triggered by the registration event and handles the async work.
-    
-    Note: The actual implementation is in features/workflows/register_workflow.py
-    This is just the registration with Inngest.
     """
     # Import here to avoid circular dependencies
     from features.workflows.register_workflow import execute_registration_workflow
@@ -125,47 +97,6 @@ async def process_registration(event: Event, step):
     except Exception as e:
         logger.error(f"Failed to process registration: {e}", exc_info=True)
         raise  # Re-raise to trigger Inngest retry
-
-
-def create_fast_api_app(app, serve_path: str = "/api/inngest"):
-    """
-    Create and mount the Inngest FastAPI app.
-    This creates the webhook endpoint that Inngest uses to discover and run functions.
-    
-    This is the critical piece that's not well documented:
-    - Inngest needs a webhook endpoint to discover your functions
-    - The serve() function creates this endpoint
-    - It must be mounted on your FastAPI app
-    
-    Args:
-        app: FastAPI application instance
-        serve_path: Path where Inngest webhook will be mounted
-    
-    Returns:
-        The Inngest app (for reference, usually not needed)
-    """
-    # Get all registered functions
-    functions = [
-        process_registration,
-        # Add other functions here as they're created
-    ]
-    
-    logger.info(f"Registering {len(functions)} Inngest functions at {serve_path}")
-    
-    # Create the Inngest FastAPI app
-    # This creates the /api/inngest endpoint that Inngest polls
-    inngest_app = serve(
-        inngest_client,
-        functions,
-        serve_path=serve_path
-    )
-    
-    # The serve() function returns a FastAPI router that needs to be included
-    app.include_router(inngest_app)
-    
-    logger.info(f"Inngest webhook mounted at {serve_path}")
-    
-    return inngest_app
 
 
 # Event name constants for consistency

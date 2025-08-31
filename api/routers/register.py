@@ -70,12 +70,22 @@ async def register(request: RegisterRequest):
             
             if not event_sent:
                 logger.warning(f"Inngest event trigger returned False for {request_id}")
-                # Continue anyway - we still want to return success
+                # Fallback: Process synchronously in background
+                from features.workflows.register_workflow import execute_registration_workflow_sync
+                import asyncio
+                asyncio.create_task(execute_registration_workflow_sync(normalized_data))
+                logger.info(f"Queued workflow for synchronous processing: {request_id}")
                 
         except Exception as e:
             logger.error(f"Failed to trigger Inngest event for {request_id}: {e}")
-            # Don't fail the request - we can still return success
-            # This follows the "fail gracefully" principle
+            # Fallback: Process synchronously in background
+            try:
+                from features.workflows.register_workflow import execute_registration_workflow_sync
+                import asyncio
+                asyncio.create_task(execute_registration_workflow_sync(normalized_data))
+                logger.info(f"Fallback: Queued workflow for synchronous processing: {request_id}")
+            except Exception as e2:
+                logger.error(f"Failed to queue workflow: {e2}")
         
         # Return immediate success
         # The actual processing happens asynchronously

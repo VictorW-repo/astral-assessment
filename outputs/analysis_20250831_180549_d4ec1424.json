@@ -1,0 +1,26 @@
+{
+  "request_id": "d4ec1424-5342-4614-86bb-7706366464f6",
+  "timestamp": "2025-08-31T22:05:49.764400+00:00",
+  "input_data": {
+    "first_name": "Bob",
+    "last_name": "Builder",
+    "company_website": null,
+    "linkedin": "https://linkedin.com/in/satyanadella"
+  },
+  "linkedin_analysis": {
+    "status": "not_implemented",
+    "url": "https://linkedin.com/in/satyanadella",
+    "implementation_plan": "See README.md for LinkedIn integration plan"
+  },
+  "website_analysis": {
+    "discovered_urls": [],
+    "filtered_urls": [],
+    "scraped_content": []
+  },
+  "_metadata": {
+    "filename": "analysis_20250831_180549_d4ec1424.json",
+    "saved_at": "2025-08-31T22:05:49.765383+00:00",
+    "version": "1.0.0",
+    "philosophy": "wars are won with logistics and propaganda"
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "request_id": "45d596f4-3258-4f9d-b1bf-991bbe665627",
+  "timestamp": "2025-08-31T22:05:50.868396+00:00",
+  "input_data": {
+    "first_name": "Charlie",
+    "last_name": "Chen",
+    "company_website": "https://openai.com",
+    "linkedin": "https://linkedin.com/in/gdb"
+  },
+  "linkedin_analysis": {
+    "status": "not_implemented",
+    "url": "https://linkedin.com/in/gdb",
+    "implementation_plan": "See README.md for LinkedIn integration plan"
+  },
+  "website_analysis": {
+    "discovered_urls": [
+      "https://openai.com",
+      "https://openai.com/about",
+      "https://openai.com/about-us",
+      "https://openai.com/our-story",
+      "https://openai.com/mission",
+      "https://openai.com/team",
+      "https://openai.com/leadership",
+      "https://openai.com/our-team",
+      "https://openai.com/services",
+      "https://openai.com/solutions",
+      "https://openai.com/products",
+      "https://openai.com/what-we-do",
+      "https://openai.com/case-studies",
+      "https://openai.com/portfolio",
+      "https://openai.com/our-work",
+      "https://openai.com/clients",
+      "https://openai.com/customers",
+      "https://openai.com/testimonials",
+      "https://openai.com/blog",
+      "https://openai.com/news",
+      "https://openai.com/insights",
+      "https://openai.com/resources",
+      "https://openai.com/contact",
+      "https://openai.com/contact-us",
+      "https://openai.com/careers",
+      "https://openai.com/jobs",
+      "https://openai.com/investors",
+      "https://openai.com/investor-relations",
+      "https://openai.com/press",
+      "https://openai.com/media",
+      "https://openai.com/index.html",
+      "https://openai.com/about.html",
+      "https://openai.com/services.html",
+      "https://openai.com/contact.html"
+    ],
+    "filtered_urls": [
+      "https://openai.com/about-us",
+      "https://openai.com/leadership",
+      "https://openai.com/our-team",
+      "https://openai.com/case-studies",
+      "https://openai.com/portfolio",
+      "https://openai.com/services",
+      "https://openai.com/solutions"
+    ],
+    "scraped_content": [
+      {
+        "url": "https://openai.com/about-us",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/leadership",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/our-team",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/case-studies",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/portfolio",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/services",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      },
+      {
+        "url": "https://openai.com/solutions",
+        "content": "",
+        "status": "skipped",
+        "reason": "no_api_key"
+      }
+    ],
+    "filter_reasons": {
+      "https://openai.com/about-us": "contains_about, about_us_page, shallow_url, short_url",
+      "https://openai.com/leadership": "contains_leadership, leadership_page, shallow_url, short_url",
+      "https://openai.com/our-team": "contains_team, team_page, shallow_url, short_url",
+      "https://openai.com/case-studies": "contains_case-studies, case_studies, shallow_url, short_url",
+      "https://openai.com/portfolio": "contains_portfolio, portfolio, shallow_url, short_url",
+      "https://openai.com/services": "contains_services, services, shallow_url, short_url",
+      "https://openai.com/solutions": "contains_solutions, solutions, shallow_url, short_url"
+    },
+    "statistics": {
+      "total_discovered": 34,
+      "total_filtered": 7,
+      "total_scraped": 0,
+      "scrape_failures": 7
+    }
+  },
+  "_metadata": {
+    "filename": "analysis_20250831_180552_45d596f4.json",
+    "saved_at": "2025-08-31T22:05:52.383475+00:00",
+    "version": "1.0.0",
+    "philosophy": "wars are won with logistics and propaganda"
+  }
+}

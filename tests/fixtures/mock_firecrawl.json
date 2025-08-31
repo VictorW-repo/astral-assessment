@@ -1,0 +1,157 @@
+{
+  "crawl_response": {
+    "status": "success",
+    "data": [
+      {
+        "url": "https://example.com"
+      },
+      {
+        "url": "https://example.com/about"
+      },
+      {
+        "url": "https://example.com/team"
+      },
+      {
+        "url": "https://example.com/services"
+      },
+      {
+        "url": "https://example.com/case-studies"
+      },
+      {
+        "url": "https://example.com/blog"
+      },
+      {
+        "url": "https://example.com/blog/ai-transformation"
+      },
+      {
+        "url": "https://example.com/contact"
+      },
+      {
+        "url": "https://example.com/careers"
+      },
+      {
+        "url": "https://example.com/privacy"
+      },
+      {
+        "url": "https://example.com/terms"
+      },
+      {
+        "url": "https://example.com/cookie-policy"
+      },
+      {
+        "url": "https://example.com/portfolio/project-1"
+      },
+      {
+        "url": "https://example.com/portfolio/project-2"
+      },
+      {
+        "url": "https://example.com/solutions/ai-consulting"
+      },
+      {
+        "url": "https://example.com/solutions/data-science"
+      },
+      {
+        "url": "https://example.com/leadership"
+      },
+      {
+        "url": "https://example.com/investors"
+      },
+      {
+        "url": "https://example.com/press"
+      },
+      {
+        "url": "https://example.com/login"
+      }
+    ],
+    "total_found": 20
+  },
+  "scrape_response": {
+    "status": "success",
+    "data": {
+      "markdown": "# Example Company\n\n## Transforming Industries with AI\n\nWe are a leading artificial intelligence company focused on delivering cutting-edge solutions that transform how businesses operate. Founded in 2020, we've quickly become the trusted AI partner for Fortune 500 companies.\n\n### Our Mission\n\nTo democratize AI and make advanced technology accessible to organizations of all sizes.\n\n### What We Do\n\n- **AI Consulting**: Strategic guidance on AI adoption and implementation\n- **Custom AI Solutions**: Tailored machine learning models for specific business needs\n- **Data Science Services**: Advanced analytics and insights from your data\n- **AI Training**: Comprehensive programs to upskill your team\n\n### Our Approach\n\nWe believe in:\n1. **Human-Centered AI**: Technology that augments human capabilities\n2. **Ethical AI**: Responsible development with transparency and fairness\n3. **Practical Solutions**: Real-world applications that deliver measurable ROI\n\n### Leadership Team\n\n**Jane Smith, CEO**\nFormer Google AI researcher with 15 years of experience in machine learning.\n\n**John Doe, CTO**\nPioneered breakthrough NLP techniques at OpenAI.\n\n**Alice Johnson, Head of AI Ethics**\nLeading voice in responsible AI development.\n\n### Contact Us\n\nEmail: hello@example.com\nPhone: +1 (555) 123-4567\nLinkedIn: https://linkedin.com/company/example\n\n### Recent Blog Posts\n\n- [How AI is Transforming Healthcare](https://example.com/blog/ai-healthcare)\n- [The Future of Work with AI](https://example.com/blog/future-of-work)\n- [Building Trustworthy AI Systems](https://example.com/blog/trustworthy-ai)\n\n© 2025 Example Company. All rights reserved.",
+      "content": "Example Company Transforming Industries with AI We are a leading artificial intelligence company focused on delivering cutting-edge solutions that transform how businesses operate. Founded in 2020, we've quickly become the trusted AI partner for Fortune 500 companies. Our Mission To democratize AI and make advanced technology accessible to organizations of all sizes.",
+      "html": "<html><body><h1>Example Company</h1><p>Content here...</p></body></html>",
+      "metadata": {
+        "title": "Example Company - AI Solutions",
+        "description": "Leading AI company delivering transformative solutions",
+        "language": "en",
+        "sourceURL": "https://example.com/about"
+      }
+    }
+  },
+  "filtered_urls": [
+    "https://example.com",
+    "https://example.com/about",
+    "https://example.com/team",
+    "https://example.com/services",
+    "https://example.com/case-studies",
+    "https://example.com/leadership",
+    "https://example.com/solutions/ai-consulting"
+  ],
+  "sample_output": {
+    "request_id": "550e8400-e29b-41d4-a716-446655440000",
+    "timestamp": "2025-08-31T14:30:22Z",
+    "input_data": {
+      "first_name": "Jane",
+      "last_name": "Smith",
+      "company_website": "https://example.com",
+      "linkedin": "https://linkedin.com/in/janesmith"
+    },
+    "linkedin_analysis": {
+      "status": "not_implemented",
+      "url": "https://linkedin.com/in/janesmith",
+      "implementation_plan": "See README.md for LinkedIn integration plan"
+    },
+    "website_analysis": {
+      "discovered_urls": [
+        "https://example.com",
+        "https://example.com/about",
+        "https://example.com/team",
+        "https://example.com/services",
+        "https://example.com/case-studies",
+        "https://example.com/blog",
+        "https://example.com/contact",
+        "https://example.com/careers",
+        "https://example.com/privacy",
+        "https://example.com/terms"
+      ],
+      "filtered_urls": [
+        "https://example.com",
+        "https://example.com/about",
+        "https://example.com/team",
+        "https://example.com/services",
+        "https://example.com/case-studies",
+        "https://example.com/leadership",
+        "https://example.com/solutions/ai-consulting"
+      ],
+      "scraped_content": [
+        {
+          "url": "https://example.com",
+          "content": "# Example Company\n\nTransforming Industries with AI..."
+        },
+        {
+          "url": "https://example.com/about",
+          "content": "# About Us\n\nWe are a leading artificial intelligence company..."
+        },
+        {
+          "url": "https://example.com/team",
+          "status": "rate_limited",
+          "reason": "firecrawl_rate_limit",
+          "content": ""
+        }
+      ],
+      "statistics": {
+        "total_discovered": 10,
+        "total_filtered": 7,
+        "total_scraped": 2,
+        "scrape_failures": 1
+      }
+    },
+    "_metadata": {
+      "filename": "analysis_20250831_143022_550e8400.json",
+      "saved_at": "2025-08-31T14:30:25Z",
+      "version": "1.0.0",
+      "philosophy": "wars are won with logistics and propaganda"
+    }
+  }
+}

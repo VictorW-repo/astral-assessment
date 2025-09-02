@@ -6,6 +6,8 @@ This is the tricky part - triggering functions from API endpoints
 import logging
 from typing import Optional, Dict, Any
 import json
+import hmac
+import hashlib
 from datetime import datetime
 
 from inngest import Inngest, Event
@@ -46,12 +48,14 @@ async def trigger_event(
     Returns:
         bool: True if event was sent successfully
     """
+    correlation_id = event_id or uid()
+    
     try:
         # Create event object
         event = Event(
             name=event_name,
             data=data,
-            id=event_id or uid(),
+            id=correlation_id,
             ts=ts_override or datetime.utcnow().timestamp() * 1000  # Inngest expects milliseconds
         )
         
@@ -59,13 +63,69 @@ async def trigger_event(
         # This is the magic - it queues the event for async processing
         result = inngest_client.send(event)
         
-        logger.info(f"Triggered Inngest event: {event_name} with id: {event.id}")
+        logger.info(f"Triggered Inngest event: {event_name} with correlation_id: {correlation_id}")
         logger.debug(f"Event data: {json.dumps(data, default=str)[:200]}...")  # Log first 200 chars
         
         return True
         
     except Exception as e:
-        logger.error(f"Failed to trigger Inngest event {event_name}: {e}", exc_info=True)
+        logger.error(f"Failed to trigger Inngest event {event_name} (correlation_id: {correlation_id}): {e}", exc_info=True)
+        return False
+
+
+def validate_webhook_signature(
+    payload: bytes,
+    signature: Optional[str],
+    signing_key: Optional[str]
+) -> bool:
+    """
+    Validate Inngest webhook signature for security.
+    
+    Args:
+        payload: Raw webhook payload bytes
+        signature: Signature from Inngest-Signature header
+        signing_key: Inngest signing key from configuration
+    
+    Returns:
+        bool: True if signature is valid or validation disabled
+    """
+    # Skip validation if no signing key configured (development mode)
+    if not signing_key:
+        logger.debug("Webhook signature validation skipped - no signing key configured")
+        return True
+    
+    # Skip validation if no signature provided
+    if not signature:
+        logger.warning("Webhook signature validation failed - no signature header")
+        return False
+    
+    try:
+        # Parse signature (format: "s=<signature>")
+        if not signature.startswith("s="):
+            logger.warning("Invalid signature format - expected 's=<signature>'")
+            return False
+        
+        provided_signature = signature[2:]  # Remove "s=" prefix
+        
+        # Calculate expected signature
+        expected_signature = hmac.new(
+            signing_key.encode(),
+            payload,
+            hashlib.sha256
+        ).hexdigest()
+        
+        # Compare signatures (constant-time comparison)
+        is_valid = hmac.compare_digest(provided_signature, expected_signature)
+        
+        if not is_valid:
+            logger.warning("Webhook signature validation failed - signature mismatch")
+        else:
+            logger.debug("Webhook signature validation passed")
+            
+        return is_valid
+        
+    except Exception as e:
+        logger.error(f"Webhook signature validation error: {e}")
         return False
 
 

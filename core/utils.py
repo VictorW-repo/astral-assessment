@@ -452,3 +452,105 @@ def calculate_processing_stats(processing_log: list) -> Dict[str, Any]:
             else 0
         ),
     }
+
+
+def get_human_readable_error(error_code: str) -> str:
+    """
+    Get human-readable error message for a technical error code.
+    Delegates to the error_messages module for consistent error handling.
+    
+    Args:
+        error_code: Technical error code (e.g., 'http_402', 'circuit_breaker_open')
+    
+    Returns:
+        Human-readable error message
+    """
+    from core.error_messages import format_error_message
+    return format_error_message(error_code, include_action=True)
+
+
+def create_error_summary_for_metadata(error_codes: list) -> dict:
+    """
+    Create an error summary for inclusion in workflow metadata.
+    Provides user-friendly error information and actionable guidance.
+    
+    Args:
+        error_codes: List of technical error codes encountered during processing
+    
+    Returns:
+        Dict with comprehensive error summary
+    """
+    from core.error_messages import create_error_summary
+    return create_error_summary(error_codes)
+
+
+def extract_error_codes_from_results(results: list) -> list:
+    """
+    Extract error codes from processing results for summary generation.
+    Handles both individual results and nested result structures.
+    
+    Args:
+        results: List of processing results (e.g., scrape results)
+    
+    Returns:
+        List of unique error codes found in the results
+    """
+    error_codes = set()
+    
+    for result in results:
+        if isinstance(result, dict):
+            # Check for direct error codes
+            if result.get("status") != "success":
+                reason = result.get("reason")
+                if reason:
+                    error_codes.add(reason)
+            
+            # Check nested results (e.g., scraped_content)
+            if "results" in result and isinstance(result["results"], list):
+                nested_codes = extract_error_codes_from_results(result["results"])
+                error_codes.update(nested_codes)
+    
+    return list(error_codes)
+
+
+def enhance_processing_log_entry(
+    step_name: str, 
+    duration_ms: int, 
+    status: str, 
+    error_code: str = None,
+    **kwargs
+) -> dict:
+    """
+    Create an enhanced processing log entry with human-readable error information.
+    Extends the basic processing log entry with user-friendly error details.
+    
+    Args:
+        step_name: Name of the processing step
+        duration_ms: Duration in milliseconds  
+        status: Status (success, error, skipped, etc.)
+        error_code: Optional technical error code
+        **kwargs: Additional metadata
+    
+    Returns:
+        Enhanced log entry with error details
+    """
+    entry = create_processing_log_entry(step_name, duration_ms, status, **kwargs)
+    
+    # Add human-readable error information if there was an error
+    if error_code and status != "success":
+        entry["error_code"] = error_code
+        entry["human_readable_error"] = get_human_readable_error(error_code)
+        
+        # Add action guidance
+        from core.error_messages import get_human_readable_error as get_error_info, get_action_guidance
+        error_info = get_error_info(error_code)
+        if error_info and "action" in error_info:
+            action_guidance = get_action_guidance(error_info["action"])
+            if action_guidance:
+                entry["suggested_action"] = {
+                    "code": error_info["action"],
+                    "title": action_guidance["title"],
+                    "description": action_guidance["description"]
+                }
+    
+    return entry

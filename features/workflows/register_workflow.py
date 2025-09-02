@@ -204,8 +204,8 @@ async def analyze_website(website_url: str, processing_log: list = None) -> Dict
     }
     
     try:
-        # Phase 1: URL Discovery
-        logger.info(f"Phase 1: Discovering URLs for {website_url}")
+        # Phase 1: URL Discovery (v2 crawl includes content)
+        logger.info(f"Phase 1: Discovering URLs and content for {website_url}")
         discovery_start = time.time() * 1000
         discovery_result = await discover.discover_urls(website_url)
         discovery_duration = int(time.time() * 1000 - discovery_start)
@@ -218,6 +218,9 @@ async def analyze_website(website_url: str, processing_log: list = None) -> Dict
                 urls_found=len(discovery_result.get("urls", []))
             ))
         
+        # Track content from crawl for later use
+        crawl_content_by_url = {}
+        
         if discovery_result["status"] != "success":
             logger.warning(f"URL discovery failed: {discovery_result}")
             # Still continue with just the main URL
@@ -227,6 +230,14 @@ async def analyze_website(website_url: str, processing_log: list = None) -> Dict
         else:
             result["discovered_urls"] = discovery_result["urls"]
             logger.info(f"Discovered {len(result['discovered_urls'])} URLs")
+            
+            # Extract content from v2 crawl if available
+            if "scraped_content" in discovery_result:
+                for item in discovery_result["scraped_content"]:
+                    url = item.get("url")
+                    if url:
+                        crawl_content_by_url[url] = item
+                logger.info(f"Got content from crawl for {len(crawl_content_by_url)} URLs")
         
         # Phase 2: Intelligent Filtering
         logger.info(f"Phase 2: Filtering {len(result['discovered_urls'])} URLs")
@@ -250,35 +261,66 @@ async def analyze_website(website_url: str, processing_log: list = None) -> Dict
         result["filter_reasons"] = filter_result.get("reasons", {})
         logger.info(f"Filtered to {len(result['filtered_urls'])} valuable URLs")
         
-        # Phase 3: Content Scraping
-        logger.info(f"Phase 3: Scraping {len(result['filtered_urls'])} URLs")
+        # Phase 3: Content Processing (use crawl content when available)
+        logger.info(f"Phase 3: Processing content for {len(result['filtered_urls'])} URLs")
         scrape_start = time.time() * 1000
-        scrape_result = await scrape.scrape_urls(result["filtered_urls"])
+        
+        # Separate URLs that need scraping vs those with content from crawl
+        urls_needing_scrape = []
+        content_from_crawl = []
+        
+        for url in result["filtered_urls"]:
+            if url in crawl_content_by_url:
+                # Use content from crawl
+                crawl_item = crawl_content_by_url[url]
+                content_from_crawl.append({
+                    "url": url,
+                    "content": crawl_item.get("content", ""),
+                    "status": crawl_item.get("status", "success")
+                })
+            else:
+                # Need to scrape this URL separately
+                urls_needing_scrape.append(url)
+        
+        # Scrape any remaining URLs not covered by crawl
+        additional_scrape_results = []
+        if urls_needing_scrape:
+            logger.info(f"Scraping {len(urls_needing_scrape)} additional URLs not covered by crawl")
+            scrape_result = await scrape.scrape_urls(urls_needing_scrape)
+            additional_scrape_results = scrape_result.get("results", [])
+        
         scrape_duration = int(time.time() * 1000 - scrape_start)
         
-        success_count = len([r for r in scrape_result["results"] if r["status"] == "success"])
+        # Combine content from crawl and additional scraping
+        all_content_results = content_from_crawl + additional_scrape_results
+        success_count = len([r for r in all_content_results if r.get("status") == "success"])
         
         if processing_log is not None and settings.OUTPUT_DETAILED_LOGGING:
             processing_log.append(create_processing_log_entry(
                 "content_scraping",
                 scrape_duration,
                 "success" if success_count > 0 else "partial",
-                urls_scraped=len(result["filtered_urls"]),
+                urls_from_crawl=len(content_from_crawl),
+                urls_scraped_separately=len(urls_needing_scrape),
                 successful_scrapes=success_count,
-                failed_scrapes=len(result["filtered_urls"]) - success_count
+                failed_scrapes=len(all_content_results) - success_count
             ))
         
         # Format scraped content for output
-        for item in scrape_result["results"]:
+        for item in all_content_results:
             content_entry = {
-                "url": item["url"],
+                "url": item.get("url", ""),
                 "content": item.get("content", "")
             }
             
             # Add metadata if scraping failed
-            if item["status"] != "success":
-                content_entry["status"] = item["status"]
+            if item.get("status") != "success":
+                content_entry["status"] = item.get("status", "unknown")
                 content_entry["reason"] = item.get("reason", "unknown")
+                
+                # Add human-readable error if available
+                if item.get("human_readable_error"):
+                    content_entry["human_readable_error"] = item["human_readable_error"]
             
             result["scraped_content"].append(content_entry)
         
@@ -286,8 +328,8 @@ async def analyze_website(website_url: str, processing_log: list = None) -> Dict
         result["statistics"] = {
             "total_discovered": len(result["discovered_urls"]),
             "total_filtered": len(result["filtered_urls"]),
-            "total_scraped": len([s for s in scrape_result["results"] if s["status"] == "success"]),
-            "scrape_failures": len([s for s in scrape_result["results"] if s["status"] != "success"])
+            "total_scraped": success_count,
+            "scrape_failures": len(all_content_results) - success_count
         }
         
         logger.info(f"Website analysis complete: {result['statistics']}")
@@ -384,6 +426,24 @@ async def save_workflow_results(
                 if statistics.get("total_filtered", 0) > 0 else 0
             )
         }
+        
+        # Add error summary for user-friendly error information
+        error_codes = []
+        
+        # Collect error codes from discovery
+        if website_analysis.get("discovery_reason"):
+            error_codes.append(website_analysis["discovery_reason"])
+        
+        # Collect error codes from scraping
+        scraped_content = website_analysis.get("scraped_content", [])
+        for content_item in scraped_content:
+            if content_item.get("status") != "success" and content_item.get("reason"):
+                error_codes.append(content_item["reason"])
+        
+        # Add error summary if there are any errors
+        if error_codes:
+            from core.utils import create_error_summary_for_metadata
+            metadata["error_summary"] = create_error_summary_for_metadata(error_codes)
         
         result["_metadata"] = metadata
         

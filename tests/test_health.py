@@ -165,7 +165,7 @@ def test_health_integration_status():
     
     # Firecrawl should have a valid URL
     firecrawl = data["integrations"]["firecrawl"]
-    assert firecrawl["api_url"] == "https://api.firecrawl.dev/v1"
+    assert firecrawl["api_url"] == "https://api.firecrawl.dev/v2"
     
     # Check boolean flags
     assert isinstance(inngest["configured"], bool)

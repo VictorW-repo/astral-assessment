@@ -1,10 +1,10 @@
-# Astral Technical Assessment
+# Astral Technical Assessment - Victor Wang
 
 **wars are won with logistics and propaganda**
 
 A FastAPI application that builds an MVP for intelligent lead data collection and analysis, demonstrating async processing, web scraping, and thoughtful system design.
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```bash
 # Clone the repository
@@ -26,7 +26,7 @@ cp .env.example .env
 
 Visit http://localhost:8000/docs for interactive API documentation.
 
-## 📋 Project Overview
+##  Project Overview
 
 This project implements a lead intelligence pipeline that:
 1. Accepts registration data via REST API
@@ -42,7 +42,7 @@ As an AI company operating at the cutting edge, we solve problems intelligently 
 - **Async architecture**: Non-blocking request handling with queue-based processing
 - **Pragmatic engineering**: Ship working code fast, optimize later
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 /register endpoint → Inngest Event → Async Workflow → JSON Output
@@ -56,7 +56,7 @@ As an AI company operating at the cutting edge, we solve problems intelligently 
                   Structured JSON Report
 ```
 
-## 🧪 Test Cases
+##  Test Cases
 
 The application includes three required test scenarios:
 
@@ -86,7 +86,7 @@ Run all three scenarios at once:
 ./scripts/seed_examples.sh
 ```
 
-## 📁 Output Format
+##  Output Format
 
 Results are saved to `outputs/analysis_YYYYMMDD_HHMMSS_<request_id>.json`:
 
@@ -166,7 +166,7 @@ FIRECRAWL_API_KEY=your_key_here
 INNGEST_EVENT_KEY=your_key_here
 ```
 
-## 📊 LinkedIn Implementation Plan
+##  LinkedIn Implementation Plan
 
 While LinkedIn scraping is not implemented (as requested), here's the approach I would take:
 
@@ -237,7 +237,7 @@ if input_data.get("linkedin"):
 - **Data Privacy**: Only collect necessary information
 - **Cost Optimization**: Cache results when possible
 
-## 🎯 Key Design Decisions
+##  Key Design Decisions
 
 ### Why Inngest?
 
@@ -265,7 +265,7 @@ Following the "less is more" principle:
 - Easy to inspect and debug
 - Portable and version-controllable
 
-## 🧠 Intelligent URL Filtering
+##  Intelligent URL Filtering
 
 The filtering algorithm scores URLs based on business intelligence value:
 
@@ -281,7 +281,7 @@ The filtering algorithm scores URLs based on business intelligence value:
 
 **Result**: Top 7 URLs selected for scraping
 
-## 🔍 Testing
+##  Testing
 
 Run the complete test suite:
 ```bash
@@ -318,14 +318,14 @@ Following Astral's engineering principles:
 
 ### Time Spent
 
-This project was completed in approximately 10 hours:
+This project was completed in approximately 6 hours:
 - Architecture design: 1 hour
-- Core implementation: 4 hours
-- Inngest integration: 2 hours
-- Testing and debugging: 2 hours
+- Core implementation: 2 hours
+- Inngest integration: 1 hours
+- Testing and debugging: 1 hours
 - Documentation: 1 hour
 
-## 🚢 Production Considerations
+##  Production Considerations
 
 For production deployment:
 
@@ -335,10 +335,6 @@ For production deployment:
 4. **Scale horizontally**: Multiple workers with load balancer
 5. **Persistent storage**: PostgreSQL with SQLAlchemy
 6. **Enhanced security**: Rate limiting, input sanitization
-
-## 📬 Contact
-
-For questions about this assessment, please reach out through the appropriate channels.
 
 ---
 

@@ -1,0 +1,66 @@
+{
+  "request_id": "aa3f9c16-3425-42bc-9fb6-511e7df287d5",
+  "timestamp": "2025-09-02T21:42:00.658871+00:00",
+  "input_data": {
+    "first_name": "Bob",
+    "last_name": "Builder",
+    "company_website": null,
+    "linkedin": "https://linkedin.com/in/satyanadella"
+  },
+  "linkedin_analysis": {
+    "status": "not_implemented",
+    "url": "https://linkedin.com/in/satyanadella",
+    "implementation_plan": "See README.md for LinkedIn integration plan"
+  },
+  "website_analysis": {
+    "discovered_urls": [],
+    "filtered_urls": [],
+    "scraped_content": []
+  },
+  "_processing_log": [
+    {
+      "step": "linkedin_analysis",
+      "duration_ms": 0,
+      "status": "not_implemented",
+      "timestamp": "2025-09-02T21:42:00.660633+00:00"
+    }
+  ],
+  "_metadata": {
+    "filename": "analysis_20250902_174200_BobB_aa3f9c16.json",
+    "person_name": "Bob Builder",
+    "saved_at": "2025-09-02T21:42:00.660990+00:00",
+    "version": "1.1.0",
+    "philosophy": "wars are won with logistics and propaganda",
+    "processing": {
+      "started_at": "2025-09-02T21:42:00.658871+00:00",
+      "completed_at": "2025-09-02T21:42:00.660999+00:00",
+      "duration_ms": 0,
+      "duration_seconds": null,
+      "steps": [
+        {
+          "step": "linkedin_analysis",
+          "duration_ms": 0,
+          "status": "not_implemented",
+          "timestamp": "2025-09-02T21:42:00.660633+00:00"
+        }
+      ],
+      "statistics": {
+        "total_duration_ms": 0,
+        "total_duration_seconds": 0.0,
+        "total_steps": 1,
+        "status_counts": {
+          "not_implemented": 1
+        },
+        "total_api_calls": 0,
+        "success_rate": 0.0
+      }
+    },
+    "resources": {
+      "content_bytes_scraped": 0,
+      "urls_discovered": 0,
+      "urls_filtered": 0,
+      "urls_scraped": 0,
+      "scrape_success_rate": 0
+    }
+  }
+}

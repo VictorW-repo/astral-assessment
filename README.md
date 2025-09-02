@@ -293,6 +293,31 @@ Individual test files:
 - `test_register_validation.py` - Input validation rules
 - `test_output_shape.py` - JSON output structure
 
+### Individual API Testing
+
+Test each of the three supported scenarios individually:
+
+**1. Website URL only:**
+```bash
+curl -X POST http://localhost:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{"first_name":"Alice","last_name":"Anderson","company_website":"https://stripe.com"}'
+```
+
+**2. LinkedIn URL only:**
+```bash
+curl -X POST http://localhost:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{"first_name":"Bob","last_name":"Builder","linkedin":"https://linkedin.com/in/satyanadella"}'
+```
+
+**3. Both provided:**
+```bash
+curl -X POST http://localhost:8000/register \
+  -H "Content-Type: application/json" \
+  -d '{"first_name":"Charlie","last_name":"Chen","company_website":"https://openai.com","linkedin":"https://linkedin.com/in/gdb"}'
+```
+
 ## 📝 Development Notes
 
 ### Project Structure

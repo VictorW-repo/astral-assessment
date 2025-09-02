@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     )
 
     FIRECRAWL_API_URL: str = Field(
-        default="https://api.firecrawl.dev/v1", description="Firecrawl API base URL"
+        default="https://api.firecrawl.dev/v2", description="Firecrawl API base URL (v2)"
     )
 
     FIRECRAWL_MAX_URLS: int = Field(default=50, description="Maximum URLs to discover during crawl")
@@ -72,6 +72,15 @@ class Settings(BaseSettings):
 
     FIRECRAWL_REQUESTS_PER_MINUTE: int = Field(
         default=30, description="Rate limit for Firecrawl API requests per minute"
+    )
+
+    # Firecrawl v2 Async Crawl Configuration
+    FIRECRAWL_CRAWL_POLL_INTERVAL: int = Field(
+        default=2, description="Seconds between crawl job status polls"
+    )
+
+    FIRECRAWL_CRAWL_MAX_WAIT: int = Field(
+        default=300, description="Maximum seconds to wait for crawl completion (5 minutes)"
     )
 
     # Inngest Configuration

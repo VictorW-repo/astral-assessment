@@ -47,7 +47,10 @@ class FirecrawlClient:
         self.circuit_open = False
 
         # Create HTTP client with Firecrawl-specific config
-        headers = {}
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
 
@@ -154,6 +157,19 @@ class FirecrawlClient:
             logger.warning("Circuit breaker is open, skipping Firecrawl request")
             raise httpx.HTTPError("Circuit breaker is open")
 
+        # Build full URL for logging
+        full_url = f"{self.base_url}{endpoint}"
+        
+        # Log request details (but redact API key)
+        headers_log = dict(self.client.headers) if hasattr(self.client, 'headers') else {}
+        if 'Authorization' in headers_log:
+            headers_log['Authorization'] = 'Bearer [REDACTED]'
+        
+        logger.info(f"Firecrawl API Request - {method.upper()} {full_url}")
+        logger.info(f"Request Headers: {headers_log}")
+        if json_data:
+            logger.info(f"Request Payload: {json_data}")
+
         last_exception = None
 
         for attempt in range(settings.FIRECRAWL_MAX_RETRIES + 1):
@@ -166,6 +182,17 @@ class FirecrawlClient:
                     response = await self.client.post(endpoint, json=json_data)
                 else:
                     response = await self.client.get(endpoint)
+
+                # Log response details
+                logger.info(f"Firecrawl API Response - Status: {response.status_code}")
+                try:
+                    response_text = response.text
+                    if response_text:
+                        logger.info(f"Response Body: {response_text}")
+                    else:
+                        logger.info("Response Body: (empty)")
+                except Exception as e:
+                    logger.warning(f"Could not log response body: {e}")
 
                 # Check for rate limiting
                 if response.status_code == 429:
@@ -242,71 +269,230 @@ class FirecrawlClient:
             return {"status": "error", "reason": "invalid_url", "urls": []}
 
         try:
-            # Firecrawl crawl endpoint
+            # Firecrawl v2 crawl endpoint - async job-based
             endpoint = "/crawl"
 
-            # Request payload - using map method for discovering URLs
+            # v2 API request payload - much simpler than v1
             payload = {
                 "url": url,
-                "mode": "map",  # Map mode returns list of URLs without content
-                "limit": min(limit, settings.FIRECRAWL_MAX_URLS),
-                "includeSubdomains": False,  # Stay on same domain
-                "maxDepth": 3,  # Don't go too deep
-                "allowBackwardLinks": False,
-                "allowExternalLinks": False,
-                "ignoreSitemap": False,  # Use sitemap if available
-                "scrapeOptions": {
-                    "formats": ["markdown"],  # We'll use markdown later
-                    "onlyMainContent": True,
-                },
+                "limit": min(limit, settings.FIRECRAWL_MAX_URLS)
             }
 
-            logger.info(f"Crawling {url} with limit {limit}")
+            logger.info(f"Starting crawl job for {url} with limit {limit} (v2 API)")
 
-            # Use resilient request method
+            # Step 1: Start the crawl job
             response = await self._make_request_with_retry("POST", endpoint, payload)
 
             # Handle errors (resilient method handles retries)
             if not response.is_success:
                 logger.error(f"Firecrawl crawl failed with status {response.status_code}")
-                return {"status": "error", "reason": f"http_{response.status_code}", "urls": [url]}
+                error_code = f"http_{response.status_code}"
+                from core.utils import get_human_readable_error
+                return {
+                    "status": "error", 
+                    "reason": error_code, 
+                    "urls": [url],
+                    "human_readable_error": get_human_readable_error(error_code)
+                }
 
-            # Parse response
+            # Parse v2 API job response
             data = response.json()
 
-            # Extract URLs from response
-            # Firecrawl returns data in different formats depending on mode
-            urls = []
-            if "data" in data:
-                # Map mode returns array of URL objects
-                for item in data.get("data", []):
-                    if isinstance(item, dict) and "url" in item:
-                        urls.append(item["url"])
-                    elif isinstance(item, str):
-                        urls.append(item)
-            elif "urls" in data:
-                urls = data["urls"]
+            # v2 API response structure: {"success": true, "id": "job-id"}
+            if not data.get("success"):
+                logger.error(f"Firecrawl API returned success=false: {data}")
+                return {
+                    "status": "error",
+                    "reason": "api_failure",
+                    "urls": [url],
+                    "human_readable_error": "API request failed"
+                }
 
-            logger.info(f"Discovered {len(urls)} URLs from {url}")
+            # Extract job ID from response
+            job_id = data.get("id")
+            if not job_id:
+                logger.error(f"No job ID returned from crawl API: {data}")
+                return {
+                    "status": "error",
+                    "reason": "no_job_id",
+                    "urls": [url],
+                    "human_readable_error": "Crawl job could not be started"
+                }
 
-            return {
-                "status": "success",
-                "urls": urls[:limit],  # Respect limit
-                "total_found": len(urls),
-            }
+            logger.info(f"Started crawl job {job_id}, polling for completion...")
+
+            # Step 2: Poll for job completion
+            return await self._poll_crawl_job(job_id, url, limit)
 
         except httpx.HTTPError as e:
             if "Circuit breaker is open" in str(e):
                 logger.warning("Firecrawl circuit breaker is open")
-                return {"status": "circuit_open", "reason": "circuit_breaker_open", "urls": [url]}
+                from core.utils import get_human_readable_error
+                return {
+                    "status": "circuit_open", 
+                    "reason": "circuit_breaker_open", 
+                    "urls": [url],
+                    "human_readable_error": get_human_readable_error("circuit_breaker_open")
+                }
             logger.error(f"HTTP error while crawling {url}: {e}")
-            return {"status": "error", "reason": "http_error", "urls": [url]}
+            from core.utils import get_human_readable_error
+            return {
+                "status": "error", 
+                "reason": "http_error", 
+                "urls": [url],
+                "human_readable_error": get_human_readable_error("http_error")
+            }
         except httpx.TimeoutException:
             logger.error(f"Timeout while crawling {url} (after retries)")
-            return {"status": "timeout", "reason": "request_timeout", "urls": [url]}
+            from core.utils import get_human_readable_error
+            return {
+                "status": "timeout", 
+                "reason": "request_timeout", 
+                "urls": [url],
+                "human_readable_error": get_human_readable_error("request_timeout")
+            }
         except Exception as e:
             logger.error(f"Unexpected error crawling {url}: {e}")
-            return {"status": "error", "reason": str(e), "urls": [url]}
+            error_reason = str(e)
+            from core.utils import get_human_readable_error
+            return {
+                "status": "error", 
+                "reason": error_reason, 
+                "urls": [url],
+                "human_readable_error": get_human_readable_error(error_reason) or f"Unexpected error: {error_reason}"
+            }
+
+    async def _poll_crawl_job(self, job_id: str, original_url: str, limit: int) -> Dict[str, Any]:
+        """
+        Poll a crawl job until completion and return the results.
+        
+        Args:
+            job_id: The job ID returned from the crawl start request
+            original_url: The original URL for fallback purposes
+            limit: The URL limit for the crawl
+            
+        Returns:
+            Dict with crawl results or error info
+        """
+        import time
+        
+        start_time = time.time()
+        max_wait = settings.FIRECRAWL_CRAWL_MAX_WAIT
+        poll_interval = settings.FIRECRAWL_CRAWL_POLL_INTERVAL
+        
+        while time.time() - start_time < max_wait:
+            try:
+                # Check job status
+                endpoint = f"/crawl/{job_id}"
+                response = await self._make_request_with_retry("GET", endpoint)
+                
+                if not response.is_success:
+                    logger.error(f"Failed to check crawl status: HTTP {response.status_code}")
+                    # Don't immediately fail - try a few more times
+                    await asyncio.sleep(poll_interval)
+                    continue
+                
+                data = response.json()
+                
+                if not data.get("success"):
+                    logger.error(f"Crawl status API returned success=false: {data}")
+                    await asyncio.sleep(poll_interval) 
+                    continue
+                
+                status = data.get("status", "unknown")
+                logger.debug(f"Crawl job {job_id} status: {status}")
+                
+                if status == "completed":
+                    # Extract URLs and content from completed crawl
+                    return self._parse_completed_crawl(data, limit)
+                    
+                elif status == "failed":
+                    logger.error(f"Crawl job {job_id} failed: {data}")
+                    from core.utils import get_human_readable_error
+                    return {
+                        "status": "error",
+                        "reason": "crawl_failed",
+                        "urls": [original_url],
+                        "human_readable_error": get_human_readable_error("crawl_failed") or "Crawl job failed"
+                    }
+                    
+                elif status in ["scraping", "processing", "queued"]:
+                    # Job is still running
+                    completed = data.get("completed", 0)
+                    total = data.get("total", "?")
+                    logger.debug(f"Crawl job {job_id} in progress: {completed}/{total}")
+                    
+                    # Wait before next poll
+                    await asyncio.sleep(poll_interval)
+                    continue
+                    
+                else:
+                    logger.warning(f"Unknown crawl status: {status}")
+                    await asyncio.sleep(poll_interval)
+                    continue
+                    
+            except Exception as e:
+                logger.error(f"Error polling crawl job {job_id}: {e}")
+                await asyncio.sleep(poll_interval)
+                continue
+        
+        # Timeout reached
+        logger.warning(f"Crawl job {job_id} timed out after {max_wait} seconds")
+        from core.utils import get_human_readable_error
+        return {
+            "status": "timeout",
+            "reason": "crawl_timeout", 
+            "urls": [original_url],
+            "human_readable_error": get_human_readable_error("request_timeout") or "Crawl job timed out"
+        }
+
+    def _parse_completed_crawl(self, data: Dict[str, Any], limit: int) -> Dict[str, Any]:
+        """
+        Parse completed crawl job data and extract URLs and content.
+        
+        Args:
+            data: The completed crawl job response
+            limit: URL limit to respect
+            
+        Returns:
+            Dict with discovered URLs and content
+        """
+        urls = []
+        scraped_content = []
+        
+        # Extract data items from the crawl response
+        data_items = data.get("data", [])
+        
+        if isinstance(data_items, list):
+            for item in data_items:
+                if isinstance(item, dict):
+                    # Extract URL from metadata
+                    source_url = None
+                    if "metadata" in item and isinstance(item["metadata"], dict):
+                        source_url = item["metadata"].get("sourceURL")
+                    
+                    if not source_url and "url" in item:
+                        source_url = item["url"]
+                    
+                    if source_url:
+                        urls.append(source_url)
+                        
+                        # Extract content if available (v2 crawl includes content)
+                        content = item.get("markdown", "") or item.get("html", "") or ""
+                        scraped_content.append({
+                            "url": source_url,
+                            "content": content,
+                            "status": "success" if content else "no_content"
+                        })
+        
+        logger.info(f"Parsed crawl results: {len(urls)} URLs discovered, {len(scraped_content)} with content")
+        
+        return {
+            "status": "success",
+            "urls": urls[:limit],  # Respect limit
+            "total_found": len(urls),
+            "scraped_content": scraped_content[:limit]  # Also include content from crawl
+        }
 
     async def scrape(self, url: str, format: str = "markdown") -> Dict[str, Any]:
         """
@@ -334,21 +520,16 @@ class FirecrawlClient:
             return {"status": "error", "reason": "invalid_url", "url": url, "content": ""}
 
         try:
-            # Firecrawl scrape endpoint
+            # Firecrawl v2 scrape endpoint
             endpoint = "/scrape"
 
-            # Request payload
+            # v2 API request payload - simplified structure
             payload = {
                 "url": url,
-                "formats": [format],  # Markdown is best for LLM processing
-                "onlyMainContent": True,  # Skip navigation, footers, etc.
-                "includeTags": ["h1", "h2", "h3", "p", "li", "strong", "em"],
-                "excludeTags": ["script", "style", "nav", "footer", "header"],
-                "waitFor": 2000,  # Wait 2s for JS to load
-                "timeout": 15000,  # 15s timeout
+                "formats": [format]  # v2 API expects array of formats
             }
 
-            logger.info(f"Scraping {url} in {format} format")
+            logger.info(f"Scraping {url} in {format} format (v2 API)")
 
             # Use resilient request method
             response = await self._make_request_with_retry("POST", endpoint, payload)
@@ -356,33 +537,49 @@ class FirecrawlClient:
             # Handle errors (resilient method handles retries)
             if not response.is_success:
                 logger.error(f"Firecrawl scrape failed with status {response.status_code}")
+                error_code = f"http_{response.status_code}"
+                from core.utils import get_human_readable_error
                 return {
                     "status": "error",
-                    "reason": f"http_{response.status_code}",
+                    "reason": error_code,
                     "url": url,
                     "content": "",
+                    "human_readable_error": get_human_readable_error(error_code)
                 }
 
-            # Parse response
+            # Parse v2 API response
             data = response.json()
 
-            # Extract content based on format
+            # v2 API response structure: {"success": true, "data": {...}}
+            if not data.get("success"):
+                logger.error(f"Firecrawl API returned success=false: {data}")
+                return {
+                    "status": "error",
+                    "reason": "api_failure",
+                    "url": url,
+                    "content": "",
+                    "human_readable_error": "API request failed"
+                }
+
+            # Extract content from v2 response data
             content = ""
-            if "data" in data:
-                if isinstance(data["data"], dict):
-                    # Look for content in various possible fields
+            data_obj = data.get("data", {})
+            
+            if isinstance(data_obj, dict):
+                # v2 API returns content directly under format name
+                if format == "markdown":
+                    content = data_obj.get("markdown", "")
+                elif format == "html":
+                    content = data_obj.get("html", "")
+                elif format == "text":
+                    content = data_obj.get("text", "")
+                else:
+                    # Fallback: try to find any content
                     content = (
-                        data["data"].get("markdown", "")
-                        or data["data"].get("content", "")
-                        or data["data"].get("text", "")
-                        or data["data"].get("html", "")
+                        data_obj.get("markdown", "") 
+                        or data_obj.get("html", "") 
+                        or data_obj.get("text", "")
                     )
-                elif isinstance(data["data"], str):
-                    content = data["data"]
-            elif "content" in data:
-                content = data["content"]
-            elif "markdown" in data:
-                content = data["markdown"]
 
             logger.info(f"Scraped {len(content)} characters from {url}")
 
@@ -391,20 +588,44 @@ class FirecrawlClient:
         except httpx.HTTPError as e:
             if "Circuit breaker is open" in str(e):
                 logger.warning("Firecrawl circuit breaker is open")
+                from core.utils import get_human_readable_error
                 return {
                     "status": "circuit_open",
                     "reason": "circuit_breaker_open",
                     "url": url,
                     "content": "",
+                    "human_readable_error": get_human_readable_error("circuit_breaker_open")
                 }
             logger.error(f"HTTP error while scraping {url}: {e}")
-            return {"status": "error", "reason": "http_error", "url": url, "content": ""}
+            from core.utils import get_human_readable_error
+            return {
+                "status": "error", 
+                "reason": "http_error", 
+                "url": url, 
+                "content": "",
+                "human_readable_error": get_human_readable_error("http_error")
+            }
         except httpx.TimeoutException:
             logger.error(f"Timeout while scraping {url} (after retries)")
-            return {"status": "timeout", "reason": "request_timeout", "url": url, "content": ""}
+            from core.utils import get_human_readable_error
+            return {
+                "status": "timeout", 
+                "reason": "request_timeout", 
+                "url": url, 
+                "content": "",
+                "human_readable_error": get_human_readable_error("request_timeout")
+            }
         except Exception as e:
             logger.error(f"Unexpected error scraping {url}: {e}")
-            return {"status": "error", "reason": str(e), "url": url, "content": ""}
+            error_reason = str(e)
+            from core.utils import get_human_readable_error
+            return {
+                "status": "error", 
+                "reason": error_reason, 
+                "url": url, 
+                "content": "",
+                "human_readable_error": get_human_readable_error(error_reason) or f"Unexpected error: {error_reason}"
+            }
 
     async def batch_scrape(
         self, urls: List[str], format: str = "markdown", max_concurrent: int = 3
@@ -437,6 +658,72 @@ class FirecrawlClient:
         results = await asyncio.gather(*tasks)
 
         return results
+
+    async def validate_api_key(self) -> Dict[str, Any]:
+        """
+        Validate API key by making a simple request to check authentication.
+        Returns status and details about the API key validity.
+        """
+        if not self.api_key:
+            return {
+                "status": "no_key",
+                "valid": False,
+                "message": "No API key configured"
+            }
+
+        try:
+            logger.info("Validating Firecrawl API key...")
+            
+            # Try to scrape a simple URL that should work with any valid key
+            # Using a minimal request to minimize credit usage
+            test_url = "https://example.com"
+            endpoint = "/scrape"
+            
+            payload = {
+                "url": test_url,
+                "formats": ["markdown"]
+            }
+
+            response = await self._make_request_with_retry("POST", endpoint, payload)
+            
+            if response.status_code == 401:
+                return {
+                    "status": "invalid_key",
+                    "valid": False,
+                    "message": "API key is invalid or expired"
+                }
+            elif response.status_code == 402:
+                return {
+                    "status": "no_credits",
+                    "valid": True,  # Key is valid, just no credits
+                    "message": "API key is valid but account has insufficient credits"
+                }
+            elif response.status_code == 403:
+                return {
+                    "status": "forbidden",
+                    "valid": False,
+                    "message": "API key lacks required permissions"
+                }
+            elif response.is_success:
+                return {
+                    "status": "valid",
+                    "valid": True,
+                    "message": "API key is valid and working"
+                }
+            else:
+                return {
+                    "status": "error",
+                    "valid": False,
+                    "message": f"Unexpected response status: {response.status_code}"
+                }
+
+        except Exception as e:
+            logger.error(f"Error validating API key: {e}")
+            return {
+                "status": "error",
+                "valid": False,
+                "message": f"Validation failed: {str(e)}"
+            }
 
     async def close(self):
         """Close the HTTP client."""
@@ -472,3 +759,9 @@ async def batch_scrape(urls: List[str], format: str = "markdown") -> List[Dict[s
     """Convenience function to batch scrape URLs."""
     client = await get_firecrawl_client()
     return await client.batch_scrape(urls, format)
+
+
+async def validate_api_key() -> Dict[str, Any]:
+    """Convenience function to validate the API key."""
+    client = await get_firecrawl_client()
+    return await client.validate_api_key()

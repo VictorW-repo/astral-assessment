@@ -318,6 +318,13 @@ curl -X POST http://localhost:8000/register \
   -d '{"first_name":"Charlie","last_name":"Chen","company_website":"https://openai.com","linkedin":"https://linkedin.com/in/gdb"}'
 ```
 
+**Note for Testing with API Keys:**
+If you have a Firecrawl API key, add it to `.env` file:
+```bash
+echo "FIRECRAWL_API_KEY=fc-your-key-here" >> .env
+```
+Then restart the server before running the curl commands above.
+
 ## 📝 Development Notes
 
 ### Project Structure
